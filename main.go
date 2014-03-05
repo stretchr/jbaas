@@ -68,6 +68,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	mp.Track(ID, "blend", &mixpanel.P{"result-size": len(blended)})
+
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	fmt.Fprintf(w, "%s", blended)
 
 }
