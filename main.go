@@ -1,14 +1,12 @@
 package main
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
 	"github.com/Mistobaan/mixpanels-go"
 	"github.com/stretchr/jsonblend/blend"
 	"io/ioutil"
 	"net/http"
-	"strings"
 )
 
 func writeError(
@@ -43,21 +41,25 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		writeError(mp, ID, w, "Unable to read request body. Error: %s", err.Error())
 		return
 	}
-	scanner := bufio.NewScanner(strings.NewReader(string(body)))
+
+	var items []map[string]interface{}
+	err = json.Unmarshal(body, &items)
+	if err != nil {
+		writeError(mp, ID, w, "Unable to unmarshal JSON from body. Error: %s", err.Error())
+		return
+	}
+
 	dest := map[string]interface{}{}
 	count := 0
-	for scanner.Scan() {
-		err := blend.BlendJSON(string(scanner.Text()), dest)
+	for _, item := range items {
+		err := blend.Blend(item, dest)
 		if err != nil {
-			writeError(mp, ID, w, "Unable to blend JSON. Error: %s\n", err.Error())
+			writeError(mp, ID, w, "Unable to blend JSON. Error: %s", err.Error())
 			return
 		}
 		count++
 	}
-	if err := scanner.Err(); err != nil {
-		writeError(mp, ID, w, "Unable to parse body. Error: %s", err.Error())
-		return
-	}
+
 	mp.Track(ID, "lines-posted", &mixpanel.P{"count": count})
 	blended, err := json.Marshal(dest)
 	if err != nil {
