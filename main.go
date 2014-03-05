@@ -22,6 +22,8 @@ func writeError(
 
 func handler(w http.ResponseWriter, r *http.Request) {
 
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
 	consumer := mixpanel.NewBuffConsumer(8)
 	mp := mixpanel.NewMixpanelWithConsumer(
 		"c6d3b1ae675719a889a0259abef2bdd5",
@@ -69,7 +71,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	mp.Track(ID, "blend", &mixpanel.P{"result-size": len(blended)})
 
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 	fmt.Fprintf(w, "%s", blended)
 
 }
